@@ -1,11 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 PNPM_INSTALLED="$(which pnpm)"
 DOCKER_INSTALLED="$(which docker)"
 CLI_INSTALLED="$(pwd)/cli/decky"
-
-# echo "$PNPM_INSTALLED"
-# echo "$DOCKER_INSTALLED"
-# echo "$CLI_INSTALLED"
+echo $PNPM_INSTALLED
+echo $DOCKER_INSTALLED
+echo $CLI_INSTALLED
 
 echo "If you are using alpine linux, do not expect any support."
 if [[ "$PNPM_INSTALLED" =~ "which" ]]; then

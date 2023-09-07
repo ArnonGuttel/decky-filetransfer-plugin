@@ -13,47 +13,29 @@ import {
 } from "decky-frontend-lib";
 import { VFC } from "react";
 import { FaShip } from "react-icons/fa";
-
 import logo from "../assets/logo.png";
+import FileExplorer from "./file_explorer"; // Import your FileExplorer component
+import { Backend } from "./server";
 
-// interface AddMethodArgs {
-//   left: number;
-//   right: number;
-// }
-
-const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
-  // const [result, setResult] = useState<number | undefined>();
-
-  // const onClick = async () => {
-  //   const result = await serverAPI.callPluginMethod<AddMethodArgs, number>(
-  //     "add",
-  //     {
-  //       left: 2,
-  //       right: 2,
-  //     }
-  //   );
-  //   if (result.success) {
-  //     setResult(result.result);
-  //   }
-  // };
-
+const Content: VFC = () => {
   return (
-    <PanelSection title="Panel Section">
+    <PanelSection title="Test Section">
+      {console.log("helllooooo arnon 0")};
       <PanelSectionRow>
         <ButtonItem
           layout="below"
-          onClick={(e) =>
+          onClick={(e: { currentTarget: any; }) =>
             showContextMenu(
-              <Menu label="Menu" cancelText="CAAAANCEL" onCancel={() => {}}>
-                <MenuItem onSelected={() => {}}>Item #1</MenuItem>
-                <MenuItem onSelected={() => {}}>Item #2</MenuItem>
-                <MenuItem onSelected={() => {}}>Item #3</MenuItem>
+              <Menu label="Menu" cancelText="CAAAANCEL" onCancel={() => { }}>
+                <MenuItem onSelected={() => { }}>Item #1</MenuItem>
+                <MenuItem onSelected={() => { }}>Item #2</MenuItem>
+                <MenuItem onSelected={() => { }}>Item #3</MenuItem>
               </Menu>,
               e.currentTarget ?? window
             )
           }
         >
-          Server says yolo
+          arnon says yolo!!!
         </ButtonItem>
       </PanelSectionRow>
 
@@ -68,38 +50,35 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({serverAPI}) => {
           layout="below"
           onClick={() => {
             Router.CloseSideMenus();
-            Router.Navigate("/decky-plugin-test");
+            Router.Navigate("/file-explorer-page");
+            Router.Navigate
           }}
         >
-          Router
+          File Explorer Page
         </ButtonItem>
       </PanelSectionRow>
+
     </PanelSection>
   );
 };
 
-const DeckyPluginRouterTest: VFC = () => {
-  return (
-    <div style={{ marginTop: "50px", color: "white" }}>
-      Hello World!
-      <DialogButton onClick={() => Router.NavigateToLibraryTab()}>
-        Go to Library
-      </DialogButton>
-    </div>
-  );
-};
 
 export default definePlugin((serverApi: ServerAPI) => {
-  serverApi.routerHook.addRoute("/decky-plugin-test", DeckyPluginRouterTest, {
-    exact: true,
-  });
+  const backend = Backend.initialize(serverApi);
+  serverApi.routerHook.addRoute(
+    '/file-explorer-page',
+    () => <FileExplorer backend={backend} />,
+    {
+      exact: true
+    }
+  )
 
   return {
-    title: <div className={staticClasses.Title}>Example Plugin</div>,
-    content: <Content serverAPI={serverApi} />,
+    title: <div className={staticClasses.Title}>DeckFT</div>,
+    content: <Content />,
     icon: <FaShip />,
-    onDismount() {
-      serverApi.routerHook.removeRoute("/decky-plugin-test");
-    },
+    // onDismount() {
+    //   serverApi.routerHook.removeRoute("/decky-plugin-test");
+    // },
   };
 });
