@@ -11,13 +11,13 @@ export interface FileExplorerPageProps {
 }
 
 export function ParseFilesList(fileListString: string): FileItem[] {
-    console.log('arnon ParseFilesList request recived');
     try {
+        console.error(fileListString);
         if (Array.isArray(fileListString)) {
             return fileListString.map((item: any) => ({
-                name: item.name || '',
-                isDirectory: Boolean(item.isDirectory),
-                path: item.path || '',
+                name: item["name"],
+                isDirectory: Boolean(item["isDirectory"]),
+                path: item["path"],
             })) as FileItem[];
         } else {
             console.error('Invalid data format received from the server');

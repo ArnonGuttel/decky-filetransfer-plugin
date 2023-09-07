@@ -19,11 +19,16 @@ export class Backend {
     this.serverAPI = server;
   }
 
-  async updateFileList(directoryPath : string): Promise<FileItem[]> {
-    console.log('arnon updateFileList request recived');
-    const fileList = (await this.serverAPI.callPluginMethod('update_file_list',  {"directory_path": directoryPath})).result as string;
-    console.log(fileList);
-    console.log('arnon asking to parse response');
+  async updateFileList(directoryPath: string): Promise<FileItem[]> {
+    const fileList = (await this.serverAPI.callPluginMethod('update_remote_file_list', { "directory_path": directoryPath })).result as string;
     return ParseFilesList(fileList);
+  }
+
+  async createSshClient(remoteIp: string, username: string, password: string, port = "22"): Promise<void> {
+    await this.serverAPI.callPluginMethod('create_ssh_client', { "remote_ip": remoteIp, "username": username, "password": password, "port": port });
+  }
+
+  async closeSshClient(){
+    await this.serverAPI.callPluginMethod('close_ssh_client', {});
   }
 }

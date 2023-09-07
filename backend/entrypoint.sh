@@ -1,8 +1,10 @@
 #!/bin/sh
-set -e
+# set -e
 
-echo "Container's IP address: `awk 'END{print $1}' /etc/hosts`"
+mkdir -p /backend/out/
+cp -r /ssh2-python /backend/out/
 
-cd /backend
+export PYTHONPATH=/backend/out/:$PYTHONPATH
+echo "The container is running"
 
-make
+/bin/sh
