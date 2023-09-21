@@ -28,7 +28,35 @@ export class Backend {
     await this.serverAPI.callPluginMethod('create_ssh_client', { "remote_ip": remoteIp, "username": username, "password": password, "port": port });
   }
 
-  async closeSshClient(){
+  async closeSshClient() {
     await this.serverAPI.callPluginMethod('close_ssh_client', {});
+  }
+
+  async getRemoteHomePath() {
+    const remoteHomePath = await this.serverAPI.callPluginMethod('get_remote_home_dir', {})
+    
+    return remoteHomePath.result as string
+  }
+
+  async setSourcePath(path: string) {
+    await this.serverAPI.callPluginMethod('set_source_path', { "path": path })
+  }
+
+  async getSourcePath() {
+    const sourcePath = await this.serverAPI.callPluginMethod('get_source_path', {})
+    return sourcePath.result as string
+  }
+
+  async setTargetPath(path: string) {
+    await this.serverAPI.callPluginMethod('set_target_path', { "path": path })
+  }
+
+  async getTargetPath() {
+    const targetPath = await this.serverAPI.callPluginMethod('get_target_path', {})
+    return targetPath.result as string
+  }
+
+  async transferFile() {
+    await this.serverAPI.callPluginMethod('transfer_file', {});
   }
 }

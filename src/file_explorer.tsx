@@ -1,5 +1,5 @@
-import { ButtonItem, DialogButton, ModalRoot } from 'decky-frontend-lib';
-import { VFC, useEffect, useState } from 'react';
+import { ButtonItem, ModalRoot } from 'decky-frontend-lib';
+import { useEffect, useState } from 'react';
 import { FileItem } from './utils';
 import { Backend } from './server';
 
@@ -31,7 +31,6 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
             console.log(`new path is: ${item.path}`)
         } else {
             console.log(`File clicked: ${item.name}`);
-            closeModal?.();
         }
     };
 
@@ -54,6 +53,10 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
         closeModal?.();
     }
 
+    const handleSetPath = () => {
+        backend.setTargetPath(currentPath)
+        closeModal?.();
+    }
 
     if (isLoading) {
         // Render a loading indicator here if needed
@@ -75,7 +78,6 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
 
             <div style={{ padding: files.length > 0 ? '20px' : '0px' }} />
             {currentPath != homeDir ?
-
                 <ButtonItem
                     layout="below"
                     onClick={() => handleGoBack()}
@@ -83,10 +85,18 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
                     Go Back
                 </ButtonItem>
                 :
-                <DialogButton onClick={handleClose}>
+                <ButtonItem
+                    layout="below"
+                    onClick={handleClose}>
                     Close Explorer
-                </DialogButton>
+                </ButtonItem>
             }
+
+            <ButtonItem
+                layout="below"
+                onClick={handleSetPath}>
+                Use This Location
+            </ButtonItem>
 
         </ModalRoot>
     );

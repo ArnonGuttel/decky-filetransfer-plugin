@@ -1,13 +1,8 @@
 import {
   ButtonItem,
   definePlugin,
-  DialogButton,
-  Field,
   FileSelectionType,
-  ModalRoot,
   PanelSection,
-  PanelSectionRow,
-  Router,
   ServerAPI,
   showModal,
   staticClasses,
@@ -20,36 +15,57 @@ import { Backend } from "./server";
 import userSettings from "./defaultUser";
 
 const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, backend }) => {
-  const [localFilePath, setLocalFilePath] = useState<string>("/home/deck");
+  const [sourceFilePath, setSourceFilePath] = useState<string>("");
+  const [targetPath, setTargetPath] = useState<string>("");
   const [ipAddr, setIpAddr] = useState<string>(userSettings.ipAddr);
   const [port, setPort] = useState<string>(userSettings.port);
   const [username, setUsername] = useState<string>(userSettings.username);
   const [password, setPassword] = useState<string>(userSettings.password);
   const closeSshClientRef = useRef(true); // Initialize with the initial value
+  const remoteHomeDir = useRef("");
+
+  useEffect(() => {
+    initState();
+  }, []); // will run when the component mounts
 
   useEffect(() => {
     return () => {
-      // This will run when the component unmounts
-      console.log(closeSshClientRef.current)
+      // will run when the component unmounts
       closeSshClientRef.current && backend.closeSshClient();
     };
   }, []);
 
+  const initState = async () => {
+		const sourceFilePath = backend.getSourcePath();
+		setSourceFilePath(await sourceFilePath);
+
+		const targetPath = backend.getTargetPath();
+		setTargetPath(await targetPath);
+  }
+
   const pickSourceFile = async () => {
     const filePickerResponse = await serverAPI.openFilePickerV2(FileSelectionType.FILE, "/home/deck", true);
-    setLocalFilePath(filePickerResponse.path)
+    backend.setSourcePath(filePickerResponse.path)
+  }
+
+  const getSourceFilePathText = () => {
+    return `source file path:  ${sourceFilePath}`;
+  }
+
+  const getTargetPathText = () => {
+    return `target path:  ${targetPath}`;
   }
 
   const SourceFilePicker = () => {
     return (
       <ButtonItem
-        description={"selected file path:"} W
+        description={getSourceFilePathText()}
         layout="below"
         onClick={() => {
           closeSshClientRef.current = false;
           pickSourceFile();
         }}>
-        {"Set folder 17"}
+        {"Set folder 2"}
       </ButtonItem>
     )
   }
@@ -57,12 +73,12 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
   const SelectTargetPathButton = () => {
     return (
       <ButtonItem
-        description={"selected target path: "}
+        description={getTargetPathText()}
         layout="below"
         onClick={() => {
           closeSshClientRef.current = false;
           showModal(
-            <FileExplorer backend={backend} homeDir="/cygdrive/c/Users/gutte" />
+            <FileExplorer backend={backend} homeDir={remoteHomeDir.current} />
           );
         }}
       >
@@ -84,18 +100,19 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     )
   }
 
-  const CreateSshClient = () => (
+  const CreateSshClientButton = () => (
     <ButtonItem
       layout="below"
-      onClick={() => {
+      onClick={async () => {
         backend.createSshClient(ipAddr, username, password, port);
+        remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
       }}
     >
       {"Create SSH Client"}
     </ButtonItem>
   );
 
-  const CloseSshClient = () => (
+  const CloseSshClientButton = () => (
     <ButtonItem
       layout="below"
       onClick={() => {
@@ -106,13 +123,25 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     </ButtonItem>
   );
 
+  const TransferFileButton = () => (
+    <ButtonItem
+      layout="below"
+      onClick={() => {
+        backend.transferFile();
+      }}
+    >
+      {"Transfer File"}
+    </ButtonItem>
+  );
+
+
   const RemoteSshParams = () => (
     <div>
       <SshParamButton label="Remote Ip" value={ipAddr} onChangeCall={setIpAddr} />
       <SshParamButton label="Port" value={port} onChangeCall={setPort} />
       <SshParamButton label="username" value={username} onChangeCall={setUsername} />
       <SshParamButton label="password" value={password} onChangeCall={setPassword} />
-      <CreateSshClient />
+      <CreateSshClientButton />
     </div>
   );
 
@@ -125,8 +154,13 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
       <PanelSection title="Target">
         <RemoteSshParams />
         <SelectTargetPathButton />
-        <CloseSshClient />
+        <CloseSshClientButton />
       </PanelSection>
+
+      <PanelSection>
+        <TransferFileButton />
+      </PanelSection>
+
     </div>
   );
 };
