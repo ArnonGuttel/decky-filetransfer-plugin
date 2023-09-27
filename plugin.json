@@ -1,10 +1,10 @@
 {
-  "name": "DeckFT",
-  "author": "NokiGut",
+  "name": "DeckSCP",
+  "author": "Arnon Guttel",
   "flags": ["debug", "_root"],
   "publish": {
-    "tags": ["template", "root"],
-    "description": "Decky example plugin.",
+    "tags": ["File Transfer","SCP","SSH","Upload"],
+    "description": "Upload files from deck to pc using SCP",
     "image": "https://opengraph.githubassets.com/1/SteamDeckHomebrew/PluginLoader"
   }
 }

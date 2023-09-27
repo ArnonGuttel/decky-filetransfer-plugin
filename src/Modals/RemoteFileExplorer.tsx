@@ -1,12 +1,13 @@
 import { ButtonItem, ModalRoot } from 'decky-frontend-lib';
 import { useEffect, useState } from 'react';
-import { FileItem } from './utils';
-import { Backend } from './server';
+import { FileItem } from '../utils';
+import { Backend } from '../server';
 
-const FileExplorer = ({ closeModal, backend, homeDir }: {
+const RemoteFileExplorer = ({ closeModal, backend, homeDir, includeFiles }: {
     closeModal?: () => void;
     backend: Backend,
-    homeDir: string
+    homeDir: string,
+    includeFiles: boolean
 }) => {
     const [pathStack, setPathStack] = useState<string[]>([homeDir]);
     const currentPath = pathStack[pathStack.length - 1];
@@ -15,7 +16,7 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
 
     // Define the fetchData function
     const fetchData = async () => {
-        const updatedFiles = await backend.updateFileList(currentPath);
+        const updatedFiles = await backend.updateFileList(currentPath, includeFiles);
         setFiles(updatedFiles);
         setIsLoading(false);
     };
@@ -77,6 +78,13 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
             ))}
 
             <div style={{ padding: files.length > 0 ? '20px' : '0px' }} />
+
+            <ButtonItem
+                layout="below"
+                onClick={handleSetPath}>
+                Use This Location
+            </ButtonItem>
+
             {currentPath != homeDir ?
                 <ButtonItem
                     layout="below"
@@ -91,16 +99,9 @@ const FileExplorer = ({ closeModal, backend, homeDir }: {
                     Close Explorer
                 </ButtonItem>
             }
-
-            <ButtonItem
-                layout="below"
-                onClick={handleSetPath}>
-                Use This Location
-            </ButtonItem>
-
         </ModalRoot>
     );
 };
 
 
-export default FileExplorer;
+export default RemoteFileExplorer;

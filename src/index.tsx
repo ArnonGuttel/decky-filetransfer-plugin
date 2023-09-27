@@ -6,21 +6,25 @@ import {
   ServerAPI,
   showModal,
   staticClasses,
-  TextField,
+  Toggle,
 } from "decky-frontend-lib";
 import { useEffect, useRef, useState, VFC } from "react";
-import { FaShip } from "react-icons/fa";
-import FileExplorer from "./file_explorer"; // Import your FileExplorer component
+import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
+import { FaFileUpload } from "react-icons/fa";
+import RemoteFileExplorer from "./Modals/RemoteFileExplorer";
 import { Backend } from "./server";
-import userSettings from "./defaultUser";
+import { Profile } from "./utils"
+import { EditProfileModal } from "./Modals/EditProfileModal"
+import ProfilesDropdown from "./Dropdowns/ProfilesDropdown";
+import { SimpleMessageModal } from "./Modals/SimpleMessageModal";
 
 const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, backend }) => {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  // const [sourceProfileName, setSourceProfileName] = useState<string>("");
+  const [targetProfileName, setTargetProfileName] = useState<string>("Local");
+  const [targetCollapsed, setTargetCollapsed] = useState<boolean>(false);
   const [sourceFilePath, setSourceFilePath] = useState<string>("");
   const [targetPath, setTargetPath] = useState<string>("");
-  const [ipAddr, setIpAddr] = useState<string>(userSettings.ipAddr);
-  const [port, setPort] = useState<string>(userSettings.port);
-  const [username, setUsername] = useState<string>(userSettings.username);
-  const [password, setPassword] = useState<string>(userSettings.password);
   const closeSshClientRef = useRef(true); // Initialize with the initial value
   const remoteHomeDir = useRef("");
 
@@ -35,17 +39,27 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     };
   }, []);
 
-  const initState = async () => {
-		const sourceFilePath = backend.getSourcePath();
-		setSourceFilePath(await sourceFilePath);
+  const currentProfile = profiles.find(profile => profile.name === targetProfileName);
+  const isTargetLocal = currentProfile?.name === "Local"
 
-		const targetPath = backend.getTargetPath();
-		setTargetPath(await targetPath);
+  const initState = async () => {
+    const sourceFilePath = backend.getSourcePath();
+    setSourceFilePath(await sourceFilePath);
+
+    const targetPath = backend.getTargetPath();
+    setTargetPath(await targetPath);
+
+    const profile = backend.getProfiles();
+    setProfiles(await profile)
+
+    const targetProfile = backend.getTargetProfile();
+    setTargetProfileName(await targetProfile)
   }
 
-  const pickSourceFile = async () => {
-    const filePickerResponse = await serverAPI.openFilePickerV2(FileSelectionType.FILE, "/home/deck", true);
-    backend.setSourcePath(filePickerResponse.path)
+  const pickLocalFile = async (isSource: boolean) => {
+    const selectionType = isSource ? FileSelectionType.FILE : FileSelectionType.FOLDER
+    const filePickerResponse = await serverAPI.openFilePickerV2(selectionType, "/home/deck", true);
+    isSource ? backend.setSourcePath(filePickerResponse.path) : backend.setTargetPath(filePickerResponse.path)
   }
 
   const getSourceFilePathText = () => {
@@ -56,16 +70,25 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     return `target path:  ${targetPath}`;
   }
 
-  const SourceFilePicker = () => {
+  const createSshClient = async () => {
+    const response = await backend.createSshClient(currentProfile!.ipAddr, currentProfile!.username, currentProfile!.password, currentProfile!.port);
+    if (!response) {
+      showModal(<SimpleMessageModal title_message={"There Was Error While Creating SSH Client, Please Verify Profile Details"} />)
+      return false
+    }
+    return true
+  }
+
+  const LocalFilePicker = ({ buttonName, isSource }: { buttonName: string, isSource: boolean }) => {
     return (
       <ButtonItem
-        description={getSourceFilePathText()}
+        description={isSource ? getSourceFilePathText() : getTargetPathText()}
         layout="below"
         onClick={() => {
           closeSshClientRef.current = false;
-          pickSourceFile();
+          pickLocalFile(isSource);
         }}>
-        {"Set folder 2"}
+        {buttonName}
       </ButtonItem>
     )
   }
@@ -75,11 +98,14 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
       <ButtonItem
         description={getTargetPathText()}
         layout="below"
-        onClick={() => {
-          closeSshClientRef.current = false;
-          showModal(
-            <FileExplorer backend={backend} homeDir={remoteHomeDir.current} />
-          );
+        onClick={async () => {
+          if (await createSshClient()) {
+            remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
+            closeSshClientRef.current = false;
+            showModal(
+              <RemoteFileExplorer backend={backend} homeDir={remoteHomeDir.current} includeFiles={false} />
+            );
+          }
         }}
       >
         {"Select Target Path"}
@@ -87,25 +113,13 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     )
   }
 
-  const SshParamButton = ({ label, value, onChangeCall }: { label: string; value: string; onChangeCall: (newValue: string) => void }) => {
-    return (
-      <TextField
-        label={label}
-        value={value}
-        onBlur={(e) => {
-          onChangeCall(e.target.value)
-          console.log(`arguttel changed -new value is ${e.target.value}`)
-        }}
-      />
-    )
-  }
-
   const CreateSshClientButton = () => (
     <ButtonItem
       layout="below"
       onClick={async () => {
-        backend.createSshClient(ipAddr, username, password, port);
-        remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
+        if (await createSshClient()) {
+          remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
+        }
       }}
     >
       {"Create SSH Client"}
@@ -123,45 +137,101 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     </ButtonItem>
   );
 
-  const TransferFileButton = () => (
+  const ProfileOptions = ({ collapsed, profile, setCollapsed }: { collapsed: boolean, profile: any; setCollapsed: (arg0: boolean) => any }) => {
+    return (
+      <>
+        <style>
+          {`
+            .collapsable_button > div > div > div > button {
+              height: 10px !important;
+            }
+          `}
+        </style>
+
+        <div className="collapsable_button">
+          <ButtonItem
+            layout="below"
+            bottomSeparator={collapsed ? "standard" : "none"}
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {collapsed ? (
+              <RiArrowUpSFill
+                style={{ transform: "translate(0, -13px)", fontSize: "1.5em" }} />
+            ) : (
+              <RiArrowDownSFill
+                style={{ transform: "translate(0, -12px)", fontSize: "1.5em" }} />
+            )}
+          </ButtonItem>
+        </div>
+
+        {collapsed &&
+          <div>
+            <ButtonItem
+              layout="inline"
+              label="↳"
+              onClick={() => {
+                showModal(<EditProfileModal backend={backend} profile={profile} />);
+              }}>
+              {"Edit Profile"}
+            </ButtonItem>
+
+            <ButtonItem
+              layout="inline"
+              label="↳"
+              onClick={async () => {
+                await backend.deleteProfile(profile.name);
+                await backend.setTargetProfile("Local");
+                setTargetProfileName("Local");
+                setProfiles(await backend.getProfiles());
+                setCollapsed(false);
+              }}>
+              {"Delete Profile"}
+            </ButtonItem>
+          </div>}
+      </>
+    )
+  }
+
+  const TransferFileButton = ({ button_message }: { button_message: string }) => (
     <ButtonItem
       layout="below"
-      onClick={() => {
-        backend.transferFile();
+      onClick={async () => {
+        if (isTargetLocal) {
+          const response = await backend.moveFile();
+          response && backend.clearPaths();
+          showModal(<SimpleMessageModal title_message={response ? "File Moved Successfully!" : "There Was Unexpected Error, Try Again"} />)
+        }
+        else {
+          if (await createSshClient()) {
+            remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
+            const response = await backend.uploadFile();
+            response && backend.clearPaths();
+            showModal(<SimpleMessageModal title_message={response ? "File Transfered Successfully!" : "There Was Unexpected Error, Try Again"} />)
+          }
+        }
       }}
+      disabled={!sourceFilePath || !targetPath}
     >
-      {"Transfer File"}
+      {button_message}
     </ButtonItem>
   );
 
-
-  const RemoteSshParams = () => (
-    <div>
-      <SshParamButton label="Remote Ip" value={ipAddr} onChangeCall={setIpAddr} />
-      <SshParamButton label="Port" value={port} onChangeCall={setPort} />
-      <SshParamButton label="username" value={username} onChangeCall={setUsername} />
-      <SshParamButton label="password" value={password} onChangeCall={setPassword} />
-      <CreateSshClientButton />
-    </div>
-  );
-
   return (
-    <div>
+    <>
       <PanelSection title="Source">
-        <SourceFilePicker />
+        <LocalFilePicker buttonName="Select File" isSource={true} />
       </PanelSection>
 
       <PanelSection title="Target">
-        <RemoteSshParams />
-        <SelectTargetPathButton />
-        <CloseSshClientButton />
+        <ProfilesDropdown backend={backend} profiles={profiles} currentProfile={currentProfile} />
+        {currentProfile && !isTargetLocal && <ProfileOptions collapsed={targetCollapsed} profile={currentProfile} setCollapsed={setTargetCollapsed} />}
+        {(currentProfile && !isTargetLocal) ? <SelectTargetPathButton /> : <LocalFilePicker buttonName="Set Folder Path" isSource={false} />}
       </PanelSection>
 
       <PanelSection>
-        <TransferFileButton />
+        <TransferFileButton button_message={isTargetLocal ? "Move File" : "Upload File"} />
       </PanelSection>
-
-    </div>
+    </>
   );
 };
 
@@ -172,6 +242,6 @@ export default definePlugin((serverApi: ServerAPI) => {
   return {
     title: <div className={staticClasses.Title}>DeckFT</div>,
     content: <DeckFT serverAPI={serverApi} backend={backend} />,
-    icon: <FaShip />,
+    icon: <FaFileUpload />,
   };
 });

@@ -1,7 +1,7 @@
 {
-  "name": "deck-ft",
-  "version": "0.0.1",
-  "description": "A template to quickly create decky plugins from scratch, based on TypeScript and webpack",
+  "name": "deck-scp",
+  "version": "0.1.0",
+  "description": "Upload files from deck to pc using SCP",
   "scripts": {
     "build": "shx rm -rf dist && rollup -c",
     "watch": "rollup -c -w",
