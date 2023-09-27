@@ -12,7 +12,7 @@ This is a plugin for Decky, designed to facilitate secure file transfers from th
 	gh repo clone ArnonGuttel/decky-filetransfer-plugin
    ```
 
-2. update the .vscode/defsettings.json to your deck ip and user details
+2. update the .vscode/settings.json to your deck ip and user details
 
 3. build and deploy the plugin to your deck (if using vsc simply run the builddeploy task)
 
