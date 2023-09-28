@@ -8,7 +8,7 @@ from settings import SettingsManager
 
 def add_plugin_to_path():
     plugin_dir = Path(__file__).parent.resolve()
-    directories = [["./"], ["ssh2"], ["defaults", "deps"], ["deps"]]
+    directories = [["./"], ["defaults", "deps"], ["deps"]]
     for dir in directories:
         sys.path.append(str(plugin_dir.joinpath(*dir)))
 
