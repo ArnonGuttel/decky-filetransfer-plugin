@@ -96,6 +96,11 @@ export class Backend {
     const response = await this.serverAPI.callPluginMethod('upload_file', {});
     return response.result as boolean
   }
+
+  async downloadFile() {
+    const response = await this.serverAPI.callPluginMethod('download_file', {});
+    return response.result as boolean
+  }
   
   async moveFile() {
     const response = await this.serverAPI.callPluginMethod('move_file', {});

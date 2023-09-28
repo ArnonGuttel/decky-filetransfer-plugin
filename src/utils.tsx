@@ -43,11 +43,27 @@ export function ParseFilesList(fileListString: string): FileItem[] {
     try {
         console.info(fileListString);
         if (Array.isArray(fileListString)) {
-            return fileListString.map((item: any) => ({
+            const fileItems: FileItem[] = fileListString.map((item: any) => ({
                 name: item["name"],
                 isDirectory: Boolean(item["isDirectory"]),
                 path: item["path"],
             })) as FileItem[];
+
+            fileItems.sort((a, b) => {
+                if (a.isDirectory && b.isDirectory) {
+                    // Both are directories, sort by name
+                    return a.name.localeCompare(b.name);
+                } else if (a.isDirectory && !b.isDirectory) {
+                    return -1; // a is a directory, b is not, so a comes first
+                } else if (!a.isDirectory && b.isDirectory) {
+                    return 1; // b is a directory, a is not, so b comes first
+                } else {
+                    // Both are not directories, sort by name
+                    return a.name.localeCompare(b.name);
+                }
+            });
+
+            return fileItems;
         } else {
             console.error('Invalid data format received from the server');
             return [];
@@ -57,4 +73,4 @@ export function ParseFilesList(fileListString: string): FileItem[] {
         console.error('Error parsing file list:', error);
         return [];
     }
-};
+}

@@ -283,7 +283,6 @@ class Plugin:
             target_dir = self.__target_path
             if self.__remote_home_path in target_dir:
                 target_dir = target_dir.removeprefix(self.__remote_home_path + "/")
-                decky_plugin.logger.info(target_dir)
 
             decky_plugin.logger.info(
                 f"Transferring file: {self.__source_path} to {target_dir}"
@@ -293,4 +292,29 @@ class Plugin:
             return True
         except Exception as e:
             decky_plugin.logger.error(f"Error transferring file: {str(e)}")
+            return False
+
+    async def download_file(self):
+        decky_plugin.logger.info(f"download_file request received")
+
+        if not hasattr(self, "ssh_client") or self.ssh_client.scp is None:
+            decky_plugin.logger.error(
+                f"No SCP client available. Create one before transferring files."
+            )
+            return False
+
+        try:
+            source_dir = self.__source_path
+            if self.__remote_home_path in source_dir:
+                source_dir = source_dir.removeprefix(self.__remote_home_path + "/")
+                decky_plugin.logger.info(source_dir)
+
+            decky_plugin.logger.info(
+                f"Donwloading file: {source_dir} to {self.__target_path}"
+            )
+            self.ssh_client.scp.get(source_dir, self.__target_path)
+            decky_plugin.logger.info(f"File donwloaded successfully.")
+            return True
+        except Exception as e:
+            decky_plugin.logger.error(f"Error donwloading file: {str(e)}")
             return False

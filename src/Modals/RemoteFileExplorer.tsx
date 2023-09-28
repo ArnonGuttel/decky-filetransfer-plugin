@@ -2,6 +2,7 @@ import { ButtonItem, ModalRoot } from 'decky-frontend-lib';
 import { useEffect, useState } from 'react';
 import { FileItem } from '../utils';
 import { Backend } from '../server';
+import { FaFolder } from 'react-icons/fa';
 
 const RemoteFileExplorer = ({ closeModal, backend, homeDir, includeFiles }: {
     closeModal?: () => void;
@@ -31,7 +32,7 @@ const RemoteFileExplorer = ({ closeModal, backend, homeDir, includeFiles }: {
             setPathStack([...pathStack, item.path]);
             console.log(`new path is: ${item.path}`)
         } else {
-            console.log(`File clicked: ${item.name}`);
+            handleSetPath(item.name);
         }
     };
 
@@ -54,8 +55,8 @@ const RemoteFileExplorer = ({ closeModal, backend, homeDir, includeFiles }: {
         closeModal?.();
     }
 
-    const handleSetPath = () => {
-        backend.setTargetPath(currentPath)
+    const handleSetPath = (pathSuffix: string) => {
+        includeFiles ? backend.setSourcePath(currentPath + '/' + pathSuffix) : backend.setTargetPath(currentPath)
         closeModal?.();
     }
 
@@ -73,17 +74,31 @@ const RemoteFileExplorer = ({ closeModal, backend, homeDir, includeFiles }: {
                 <ButtonItem
                     layout="below"
                     onClick={() => handleItemClick(item)}>
-                    {item.name}
+                    {item.isDirectory ?
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "start",
+                                gap: "1em",
+                            }}
+                        >
+                            <FaFolder />
+                            <span>{item.name}</span>
+                        </div>
+                        : item.name}
                 </ButtonItem>
             ))}
 
             <div style={{ padding: files.length > 0 ? '20px' : '0px' }} />
 
-            <ButtonItem
-                layout="below"
-                onClick={handleSetPath}>
-                Use This Location
-            </ButtonItem>
+            {!includeFiles &&
+                <ButtonItem
+                    layout="below"
+                    onClick={handleSetPath}>
+                    Use This Location
+                </ButtonItem>
+            }
 
             {currentPath != homeDir ?
                 <ButtonItem

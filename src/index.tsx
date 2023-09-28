@@ -10,7 +10,7 @@ import {
 } from "decky-frontend-lib";
 import { useEffect, useRef, useState, VFC } from "react";
 import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
-import { FaFileUpload } from "react-icons/fa";
+import { FaFileUpload, FaAngleRight } from "react-icons/fa";
 import RemoteFileExplorer from "./Modals/RemoteFileExplorer";
 import { Backend } from "./server";
 import { Profile } from "./utils"
@@ -18,13 +18,15 @@ import { EditProfileModal } from "./Modals/EditProfileModal"
 import ProfilesDropdown from "./Dropdowns/ProfilesDropdown";
 import { SimpleMessageModal } from "./Modals/SimpleMessageModal";
 
-const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, backend }) => {
+const DeckSCP: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, backend }) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  // const [sourceProfileName, setSourceProfileName] = useState<string>("");
+  const [sourceProfileName, setSourceProfileName] = useState<string>("Local");
   const [targetProfileName, setTargetProfileName] = useState<string>("Local");
+  const [sourceCollapsed, setSourceCollapsed] = useState<boolean>(false);
   const [targetCollapsed, setTargetCollapsed] = useState<boolean>(false);
   const [sourceFilePath, setSourceFilePath] = useState<string>("");
   const [targetPath, setTargetPath] = useState<string>("");
+  const [isInProgress, setIsInProgress] = useState(false);
   const closeSshClientRef = useRef(true); // Initialize with the initial value
   const remoteHomeDir = useRef("");
 
@@ -39,8 +41,10 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     };
   }, []);
 
-  const currentProfile = profiles.find(profile => profile.name === targetProfileName);
-  const isTargetLocal = currentProfile?.name === "Local"
+  const currentSourceProfile = profiles.find(profile => profile.name === sourceProfileName);
+  const currentTargetProfile = profiles.find(profile => profile.name === targetProfileName);
+  const isSourceLocal = currentSourceProfile?.name === "Local"
+  const isTargetLocal = currentTargetProfile?.name === "Local"
 
   const initState = async () => {
     const sourceFilePath = backend.getSourcePath();
@@ -52,13 +56,16 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     const profile = backend.getProfiles();
     setProfiles(await profile)
 
+    const sourceProfile = backend.getSourceProfile();
     const targetProfile = backend.getTargetProfile();
+    setSourceProfileName(await sourceProfile)
     setTargetProfileName(await targetProfile)
   }
 
   const pickLocalFile = async (isSource: boolean) => {
     const selectionType = isSource ? FileSelectionType.FILE : FileSelectionType.FOLDER
-    const filePickerResponse = await serverAPI.openFilePickerV2(selectionType, "/home/deck", true);
+    const filePickerResponse = await serverAPI.openFilePickerV2(selectionType, "/home/deck", isSource);
+
     isSource ? backend.setSourcePath(filePickerResponse.path) : backend.setTargetPath(filePickerResponse.path)
   }
 
@@ -71,7 +78,8 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
   }
 
   const createSshClient = async () => {
-    const response = await backend.createSshClient(currentProfile!.ipAddr, currentProfile!.username, currentProfile!.password, currentProfile!.port);
+    const RemoteProfile = isSourceLocal ? currentTargetProfile : currentSourceProfile
+    const response = await backend.createSshClient(RemoteProfile!.ipAddr, RemoteProfile!.username, RemoteProfile!.password, RemoteProfile!.port);
     if (!response) {
       showModal(<SimpleMessageModal title_message={"There Was Error While Creating SSH Client, Please Verify Profile Details"} />)
       return false
@@ -93,22 +101,23 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     )
   }
 
-  const SelectTargetPathButton = () => {
+  const SelectRemotePathButton = ({ isSource, includeFiles }: { isSource: boolean, includeFiles: boolean }) => {
     return (
       <ButtonItem
-        description={getTargetPathText()}
+        description={isSource ? getSourceFilePathText() : getTargetPathText()}
         layout="below"
         onClick={async () => {
           if (await createSshClient()) {
             remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
             closeSshClientRef.current = false;
             showModal(
-              <RemoteFileExplorer backend={backend} homeDir={remoteHomeDir.current} includeFiles={false} />
+              <RemoteFileExplorer backend={backend} homeDir={remoteHomeDir.current} includeFiles={includeFiles} />
             );
           }
         }}
+        disabled={!isSourceLocal && !isTargetLocal}
       >
-        {"Select Target Path"}
+        {isSource ? "Select File" : "Select Target Path"}
       </ButtonItem>
     )
   }
@@ -163,21 +172,30 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
             )}
           </ButtonItem>
         </div>
-
         {collapsed &&
           <div>
             <ButtonItem
-              layout="inline"
-              label="↳"
+              layout="below"
               onClick={() => {
                 showModal(<EditProfileModal backend={backend} profile={profile} />);
               }}>
-              {"Edit Profile"}
+              {
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "start",
+                    gap: "1em",
+                  }}
+                >
+                  <FaAngleRight />
+                  <span>{"Edit Profile"}</span>
+                </div>
+              }
             </ButtonItem>
 
             <ButtonItem
-              layout="inline"
-              label="↳"
+              layout="below"
               onClick={async () => {
                 await backend.deleteProfile(profile.name);
                 await backend.setTargetProfile("Local");
@@ -185,7 +203,19 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
                 setProfiles(await backend.getProfiles());
                 setCollapsed(false);
               }}>
-              {"Delete Profile"}
+              {
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "start",
+                    gap: "1em",
+                  }}
+                >
+                  <FaAngleRight />
+                  <span>{"Delete Profile"}</span>
+                </div>
+              }
             </ButtonItem>
           </div>}
       </>
@@ -196,6 +226,7 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
     <ButtonItem
       layout="below"
       onClick={async () => {
+        setIsInProgress(true);
         if (isTargetLocal) {
           const response = await backend.moveFile();
           response && backend.clearPaths();
@@ -206,30 +237,55 @@ const DeckFT: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, ba
             remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
             const response = await backend.uploadFile();
             response && backend.clearPaths();
-            showModal(<SimpleMessageModal title_message={response ? "File Transfered Successfully!" : "There Was Unexpected Error, Try Again"} />)
+            showModal(<SimpleMessageModal title_message={response ? "File Uploaded Successfully!" : "There Was Unexpected Error, Try Again"} />)
           }
         }
+        setIsInProgress(false);
       }}
-      disabled={!sourceFilePath || !targetPath}
+      disabled={!sourceFilePath || !targetPath || isInProgress}
     >
-      {button_message}
+      {isInProgress ? "Operation in Progress..." : button_message}
+    </ButtonItem>
+  );
+
+  const DownloadFileButton = ({ button_message }: { button_message: string }) => (
+    <ButtonItem
+      layout="below"
+      onClick={async () => {
+        setIsInProgress(true);
+        if (await createSshClient()) {
+          remoteHomeDir.current = (await backend.getRemoteHomePath()).trim();
+          const response = await backend.downloadFile();
+          response && backend.clearPaths();
+          showModal(<SimpleMessageModal title_message={response ? "File Downloaded Successfully!" : "There Was Unexpected Error, Try Again"} />)
+        }
+        setIsInProgress(false);
+      }}
+      disabled={!sourceFilePath || !targetPath || !isTargetLocal || isInProgress}
+    >
+      {isInProgress ? "Operation in Progress..." : button_message}
     </ButtonItem>
   );
 
   return (
     <>
       <PanelSection title="Source">
-        <LocalFilePicker buttonName="Select File" isSource={true} />
+        <ProfilesDropdown label={"Source Profile"} backend={backend} profiles={profiles} currentProfile={currentSourceProfile} isSource={true} />
+        {!isSourceLocal && <ProfileOptions collapsed={sourceCollapsed} profile={currentSourceProfile} setCollapsed={setSourceCollapsed} />}
+        {!isSourceLocal ? <SelectRemotePathButton isSource={true} includeFiles={true} /> : <LocalFilePicker buttonName="Select File" isSource={true} />}
       </PanelSection>
 
       <PanelSection title="Target">
-        <ProfilesDropdown backend={backend} profiles={profiles} currentProfile={currentProfile} />
-        {currentProfile && !isTargetLocal && <ProfileOptions collapsed={targetCollapsed} profile={currentProfile} setCollapsed={setTargetCollapsed} />}
-        {(currentProfile && !isTargetLocal) ? <SelectTargetPathButton /> : <LocalFilePicker buttonName="Set Folder Path" isSource={false} />}
+        <ProfilesDropdown label={"Target Profile"} backend={backend} profiles={profiles} currentProfile={currentTargetProfile} isSource={false} />
+        {!isTargetLocal && <ProfileOptions collapsed={targetCollapsed} profile={currentTargetProfile} setCollapsed={setTargetCollapsed} />}
+        {!isTargetLocal ? <SelectRemotePathButton isSource={false} includeFiles={false} /> : <LocalFilePicker buttonName="Set Folder Path" isSource={false} />}
       </PanelSection>
 
       <PanelSection>
-        <TransferFileButton button_message={isTargetLocal ? "Move File" : "Upload File"} />
+        {isSourceLocal ?
+          <TransferFileButton button_message={isTargetLocal ? "Move File" : "Upload File"} /> :
+          <DownloadFileButton button_message={"Download File"} />
+        }
       </PanelSection>
     </>
   );
@@ -241,7 +297,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 
   return {
     title: <div className={staticClasses.Title}>DeckFT</div>,
-    content: <DeckFT serverAPI={serverApi} backend={backend} />,
+    content: <DeckSCP serverAPI={serverApi} backend={backend} />,
     icon: <FaFileUpload />,
   };
 });

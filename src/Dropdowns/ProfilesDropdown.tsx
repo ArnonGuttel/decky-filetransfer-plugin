@@ -4,10 +4,10 @@ import { CreateProfileModal } from "../Modals/NewProfileModal";
 import { Backend } from "../server";
 import { Profile } from "../utils";
 
-const ProfilesDropdown = ({ backend, profiles, currentProfile }: { backend: Backend, profiles: Profile[], currentProfile: any }) => {
+const ProfilesDropdown = ({label, backend, profiles, currentProfile, isSource }: { label: string, backend: Backend, profiles: Profile[], currentProfile: any, isSource: boolean }) => {
     return (
         <DropdownItem
-            label="Selected Profile"
+            label={label}
             rgOptions={[
                 ...profiles.map((profile) => ({
                     data: profile.name,
@@ -25,7 +25,7 @@ const ProfilesDropdown = ({ backend, profiles, currentProfile }: { backend: Back
                             }}
                         >
                             <FiPlusCircle />
-                            <span>New Profile</span>
+                            <span>New Remote Profile</span>
                         </div>
                     ),
                 },
@@ -36,7 +36,7 @@ const ProfilesDropdown = ({ backend, profiles, currentProfile }: { backend: Back
                     showModal(<CreateProfileModal backend={backend} />);
                 }
                 else {
-                    await backend.setTargetProfile(data)
+                    isSource ? await backend.setSourceProfile(data) : await backend.setTargetProfile(data)
                 }
             }}
         />

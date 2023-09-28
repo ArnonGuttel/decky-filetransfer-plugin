@@ -6,6 +6,8 @@ This is a plugin for Decky, designed to facilitate secure file transfers from th
 
 ## Installation
 
+you can simply download the DeckSCP.zip file and unzip at the decky plugins folder, otherwise you can:
+
 1. Clone this repository to your machine  :
 	
    ```bash
