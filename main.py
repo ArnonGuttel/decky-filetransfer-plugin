@@ -149,7 +149,6 @@ class Plugin:
             decky_plugin.logger.error(f"Profile '{profile_name}' not found.")
             return False
 
-    # Can be called from JavaScript using call_plugin_function("update_file_list", directory_path)
     async def update_remote_file_list(self, directory_path, include_files):
         decky_plugin.logger.info(f"update_remote_file_list request recived")
 

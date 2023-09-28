@@ -1,39 +1,53 @@
 # Decky SCP File Transfer Plugin
 
-This is a plugin for Decky, designed to facilitate secure file transfers from the Steam Deck to a remote PC using SCP. With this plugin, you can easily manage and transfer files between your Steam Deck and remote servers.
+This is a Decky plugin designed to facilitate secure file transfers between the Steam Deck and remote PCs using SCP. With this plugin, you can easily manage and transfer files in both directions—between your Steam Deck and remote servers.
 
-![Decky-Recorder Example Screenshot](https://github.com/ArnonGuttel/decky-filetransfer-plugin/blob/main/deckSCP-screenshot.png)
+![DeckSCP Screenshot](https://github.com/ArnonGuttel/decky-filetransfer-plugin/blob/main/deckSCP-screenshot.png)
 
 ## Installation
 
-you can simply download the DeckSCP.zip file and unzip at the decky plugins folder, otherwise you can:
+You can install this plugin using one of the following methods:
 
-1. Clone this repository to your machine  :
-	
+**Method 1: Download and Unzip**
+
+1. Download the `DeckSCP.zip` file from the repository's releases.
+2. Unzip the downloaded file into your Decky plugins folder.
+
+**Method 2: Clone the Repository**
+
+1. Clone this repository to your machine using the following command:
+
    ```bash
-	gh repo clone ArnonGuttel/decky-filetransfer-plugin
+   gh repo clone ArnonGuttel/decky-filetransfer-plugin
    ```
 
-2. update the .vscode/settings.json to your deck ip and user details
+2. Configuration:
+   - Update the `.vscode/settings.json` file with your Deck's IP address and user details.
 
-3. build and deploy the plugin to your deck (if using vsc simply run the builddeploy task)
+3. Build and Deploy:
+   - Build and deploy the plugin to your Steam Deck. If you're using Visual Studio Code, you can simply run the `builddeploy` task.
 
 ## Usage
 
-1. open "DeckSCP" plugin on the plugin list.
+To use the Decky SCP File Transfer Plugin:
 
-2. **Source**: Use the "Select File" button to choose the file you want to transfer from your Steam Deck.
+1. Open the "DeckSCP" plugin from the plugin list in Decky.
 
-3. **Target**: Choose the target profile and path where you want to transfer the file. You can create and manage profiles for different remote servers.
+2. **Source**: Select a source profile (Local or Remote) and use the "Select File" button to open the local/remote file explorer. Use the explorer to select a file.
+   
+   2.1 After selection, verify the path in the button description.
 
-4. Once the SSH client is created, you can explore the remote server's file system using the "Remote File Explorer" modal.
+3. **Target**: Select a target profile (Local or Remote) and specify the destination path where you want to transfer the file.
 
-5. After selecting the target path, click the "Move File" or "Upload File" button, depending on your needs.
+4. After selecting the target path, click the action button below. The action button displayed depends on the source and target selected:
 
-   - **Move File**: If the selected profile is "Local", This will move the selected file localy from source to selected target.
-   - **Upload File**: Else, This will upload the selected file from your deck to the target directory on the remote server.
+   - **Move**: If both the source and target profiles are set to "Local," this will move the selected file locally from the source to the target.
 
-6. You'll receive a confirmation message indicating whether the file transfer was successful.
+   - **Upload**: If the source profile is "Local" and the target profile is "Remote," this will upload the selected file from your Steam Deck to the target directory on the remote server.
+
+   - **Download**: If the source profile is "Remote" and the target profile is "Local," this will download the selected file from the remote server to your Steam Deck.
+
+5. You will receive a confirmation message indicating whether the file transfer was successful.
 
 ## Profiles
 
@@ -41,7 +55,7 @@ Profiles allow you to save and manage settings for different remote servers. You
 
 - **Profile Name**: A user-defined name for the profile.
 - **IP Address**: The IP address of the remote server.
-- **Port**: Selected SSH port (default is 22).
+- **Port**: The selected SSH port (default is 22).
 - **Username**: Your username on the remote server.
 - **Password**: Your password for the remote server.
 
@@ -49,6 +63,6 @@ Profiles allow you to save and manage settings for different remote servers. You
 
 - This plugin uses SCP for file transfers, so it's important to ensure that the remote server supports SCP and SSH connections.
 
-- The ssh details will be saved localy on your deck on the plugin settings directory ("/home/deck/homebrew/settings/DeckSCP").
+- SSH details will be saved locally on your Steam Deck in the plugin settings directory (`/home/deck/homebrew/settings/DeckSCP`).
 
-- If you encounter any issues or have suggestions for improvements, please feel free to open an issue on this GitHub repository.
+- If you encounter any issues or have suggestions for improvements, please feel free to open an issue on this GitHub repository. Your feedback is valuable for enhancing the functionality of this plugin.

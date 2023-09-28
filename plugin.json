@@ -3,7 +3,7 @@
   "author": "Arnon Guttel",
   "flags": ["debug", "_root"],
   "publish": {
-    "tags": ["File Transfer","SCP","SSH","Upload"],
+    "tags": ["File Transfer","SCP","SSH","Upload","Download"],
     "description": "Upload files from deck to pc using SCP",
     "image": "https://opengraph.githubassets.com/1/SteamDeckHomebrew/PluginLoader"
   }
