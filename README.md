@@ -1,6 +1,6 @@
 # Decky SCP File Transfer Plugin
 
-This is a Decky plugin designed to facilitate secure file transfers between the Steam Deck and remote PCs using SCP. With this plugin, you can easily manage and transfer files in both directions—between your Steam Deck and remote servers.
+A Steam Deck plugin (for Decky Loader) to facilitate secure file transfers between the Steam Deck and remote PCs using SCP. With this plugin, you can easily manage and transfer files in both directions—between your Steam Deck and remote servers.
 
 ![DeckSCP Screenshot](https://github.com/ArnonGuttel/decky-filetransfer-plugin/blob/main/screenshots/deckSCP-home.png?raw=true)
 
@@ -61,7 +61,7 @@ Profiles allow you to save and manage settings for different remote servers. You
 
 ## Notes
 
-- This was made using the decky-template repo("https://github.com/SteamDeckHomebrew/decky-plugin-template/tree/main/backend").
+- This was made using the decky-template repo(https://github.com/SteamDeckHomebrew/decky-plugin-template/tree/main/backend).
 
 - This plugin uses SCP for file transfers, so it's important to ensure that the remote server and localy supports SCP and SSH connections.
 
