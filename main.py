@@ -160,17 +160,19 @@ class Plugin:
 
         try:
             decky_plugin.logger.info(f"getting files in dir: {directory_path}")
-            output = self.ssh_client.execute_command(f"ls -l {directory_path}")
+            output = self.ssh_client.execute_command(f"ls -l -L {directory_path}")
             # Parse the output to extract file information
             file_list = []
             for line in output.splitlines():
-                # Parse each line of the "ls" output
-                parts = line.split()
+                parts = line.split(None, 8)
                 if len(parts) >= 9:
                     permissions, _, _, _, _, _, _, _, name = parts[:9]
+                    if permissions.startswith("l"):
+                        name = name.split(" -> ")[0]
                     file_path = f"{directory_path}/{name}"
-                    is_directory = permissions.startswith("d")
-                    if is_directory or include_files:
+                    is_directory = permissions.startswith("d") or permissions.startswith("l")
+                    excluded_extensions = [".LOG", ".regtrans-ms", ".ini", ".tmp", ".bak", ".DAT", ".blf"]
+                    if (is_directory or include_files) and not name.endswith(tuple(excluded_extensions)):
                         file_list.append(
                             {
                                 "name": name,
@@ -178,7 +180,7 @@ class Plugin:
                                 "path": file_path,
                             }
                         )
-                    decky_plugin.logger.debug(
+                    decky_plugin.logger.info(
                         f"parsed file, name: {name}, isDirectory: {is_directory}, path : {file_path}."
                     )
             return file_list
