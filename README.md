@@ -61,8 +61,14 @@ Profiles allow you to save and manage settings for different remote servers. You
 
 ## Notes
 
-- This plugin uses SCP for file transfers, so it's important to ensure that the remote server supports SCP and SSH connections.
+- This was made using the decky-template repo("https://github.com/SteamDeckHomebrew/decky-plugin-template/tree/main/backend").
+
+- This plugin uses SCP for file transfers, so it's important to ensure that the remote server and localy supports SCP and SSH connections.
 
 - SSH details will be saved locally on your Steam Deck in the plugin settings directory (`/home/deck/homebrew/settings/DeckSCP`).
 
 - If you encounter any issues or have suggestions for improvements, please feel free to open an issue on this GitHub repository. Your feedback is valuable for enhancing the functionality of this plugin.
+
+## Known Issues
+
+- Sometimes the remote file explorer will not respond to controller buttons. In such cases, you can use the touch screen to select an arbitrary folder, after which the controller should work as normal.
