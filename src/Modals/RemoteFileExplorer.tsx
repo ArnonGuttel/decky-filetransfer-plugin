@@ -61,8 +61,16 @@ const RemoteFileExplorer = ({ closeModal, backend, homeDir, includeFiles }: {
     }
 
     if (isLoading) {
-        // Render a loading indicator here if needed
-        return <div>Loading...</div>;
+        return (
+            <ModalRoot onCancel={() => handleGoBack()}>
+                <h2>Loading...</h2>
+                <ButtonItem
+                    layout="below"
+                    onClick={handleClose}>
+                    Close Explorer
+                </ButtonItem>
+            </ModalRoot>
+        );
     }
 
     return (

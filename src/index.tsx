@@ -9,7 +9,6 @@ import {
   ServerAPI,
   showModal,
   staticClasses,
-  Toggle,
 } from "decky-frontend-lib";
 import RemoteFileExplorer from "./Modals/RemoteFileExplorer";
 import { Backend } from "./server";
@@ -32,11 +31,11 @@ const DeckSCP: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, b
 
   useEffect(() => {
     initState();
-  }, []); // will run when the component mounts
+  }, []); // component mounts
 
   useEffect(() => {
     return () => {
-      // will run when the component unmounts
+      // component unmounts
       closeSshClientRef.current && backend.closeSshClient();
     };
   }, []);
@@ -58,6 +57,7 @@ const DeckSCP: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, b
   const getTargetPathText = () => { return `target path:  ${targetPath}`; }
 
   const pickLocalFile = async (isSource: boolean) => {
+    closeSshClientRef.current = false;
     const selectionType = isSource ? FileSelectionType.FILE : FileSelectionType.FOLDER
     const filePickerResponse = await serverAPI.openFilePickerV2(selectionType, "/home/deck", isSource);
     isSource ? backend.setSourcePath(filePickerResponse.path) : backend.setTargetPath(filePickerResponse.path)
@@ -65,12 +65,35 @@ const DeckSCP: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, b
 
   const createSshClient = async () => {
     const RemoteProfile = isSourceLocal ? currentTargetProfile : currentSourceProfile
-    const response = await backend.createSshClient(RemoteProfile!.ipAddr, RemoteProfile!.username, RemoteProfile!.password, RemoteProfile!.port);
-    if (!response) {
-      showModal(<SimpleMessageModal title_message={"There Was Error While Creating SSH Client, Please Verify Profile Details"} />)
-      return false
+    const timeoutMs = 10000; 
+    const createSshClientPromise = backend.createSshClient(
+      RemoteProfile!.ipAddr,
+      RemoteProfile!.username,
+      RemoteProfile!.password,
+      RemoteProfile!.port
+    );
+    try {
+      const response = await Promise.race([
+        createSshClientPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs)),
+      ]);
+  
+      if (!response) {
+        showModal(
+          <SimpleMessageModal title_message={"SSH Client creation failed.\n Please verify profile details and try again"} />
+        );
+        return false;
+      }
+
+      return true;
+    } catch {
+      console.error('Operation timed out');
+      showModal(
+        <SimpleMessageModal title_message={"SSH Client creation failed.\nPlease verify profile details and try again"
+      } />
+        );
+      return false;
     }
-    return true
   }
 
   const LocalFilePicker = ({ buttonName, isSource }: { buttonName: string, isSource: boolean }) => {
@@ -79,7 +102,6 @@ const DeckSCP: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, b
         description={isSource ? getSourceFilePathText() : getTargetPathText()}
         layout="below"
         onClick={() => {
-          closeSshClientRef.current = false;
           pickLocalFile(isSource);
         }}>
         {buttonName}

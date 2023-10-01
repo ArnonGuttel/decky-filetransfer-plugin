@@ -35,8 +35,15 @@ const ProfilesDropdown = ({label, backend, profiles, currentProfile, isSource }:
                 if (data === "New Profile") {
                     showModal(<CreateProfileModal backend={backend} />);
                 }
-                else {
-                    isSource ? await backend.setSourceProfile(data) : await backend.setTargetProfile(data)
+                else if (data !== currentProfile?.name){
+                    if (isSource) {
+                        await backend.clearSourcePath();
+                        await backend.setSourceProfile(data);
+                      } else {
+                        await backend.clearTargetPath();
+                        await backend.setTargetProfile(data);
+                      }
+                    await backend.closeSshClient();
                 }
             }}
         />

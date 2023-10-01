@@ -180,7 +180,7 @@ class Plugin:
                                 "path": file_path,
                             }
                         )
-                    decky_plugin.logger.info(
+                    decky_plugin.logger.debug(
                         f"parsed file, name: {name}, isDirectory: {is_directory}, path : {file_path}."
                     )
             return file_list
@@ -203,8 +203,6 @@ class Plugin:
         if hasattr(self, "ssh_client") and self.ssh_client is not None:
             self.ssh_client.close()
             self.ssh_client = None
-        self.__target_path = ""
-        self.__source_path = ""
         self.__remote_home_path = ""
 
     async def get_source_profile(self):
@@ -253,10 +251,13 @@ class Plugin:
         decky_plugin.logger.info(f"get_target_path request recived")
         return self.__target_path
     
-    async def clear_selected_paths(self):
-        decky_plugin.logger.info(f"clear_selected_paths request recived")
+    async def clear_source_path(self):
+        decky_plugin.logger.info(f"clear_source_path request recived")
         self.__source_path = ""
-        self.__target_path = ""
+
+    async def clear_target_path(self):
+        decky_plugin.logger.info(f"clear_target_path request recived")
+        self.__target_path = "" 
 
     async def move_file(self):
         try:

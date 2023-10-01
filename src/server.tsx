@@ -107,7 +107,16 @@ export class Backend {
     return response.result as boolean
   }
 
+  async clearSourcePath(){
+    await this.serverAPI.callPluginMethod('clear_source_path', {});
+  }
+
+  async clearTargetPath(){
+    await this.serverAPI.callPluginMethod('clear_target_path', {});
+  }
+
   async clearPaths() {
-    await this.serverAPI.callPluginMethod('clear_selected_paths', {});
+    await this.serverAPI.callPluginMethod('clear_source_path', {});
+    await this.serverAPI.callPluginMethod('clear_target_path', {});
   }
 }
