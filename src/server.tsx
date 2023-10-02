@@ -107,6 +107,12 @@ export class Backend {
     return response.result as boolean
   }
 
+  async getProgressPercentage() {
+    const response = await this.serverAPI.callPluginMethod('get_progress_percentage', {});
+    console.log(response.result as number);
+    return response.result as number
+  }
+
   async clearSourcePath(){
     await this.serverAPI.callPluginMethod('clear_source_path', {});
   }

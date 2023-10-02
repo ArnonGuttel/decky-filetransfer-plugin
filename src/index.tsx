@@ -278,7 +278,7 @@ const DeckSCP: VFC<{ serverAPI: ServerAPI, backend: Backend }> = ({ serverAPI, b
       <PanelSection title="Target">
         <ProfilesDropdown label={"Target Profile"} backend={backend} profiles={profiles} currentProfile={currentTargetProfile} isSource={false} />
         {!isTargetLocal && <ProfileOptions collapsed={targetCollapsed} profile={currentTargetProfile} setCollapsed={setTargetCollapsed} />}
-        {!isTargetLocal ? <SelectRemotePathButton isSource={false} includeFiles={false} /> : <LocalFilePicker buttonName="Set Folder Path" isSource={false} />}
+        {!isTargetLocal ? <SelectRemotePathButton isSource={false} includeFiles={false} /> : <LocalFilePicker buttonName="Set Target Folder" isSource={false} />}
       </PanelSection>
 
       <PanelSection>

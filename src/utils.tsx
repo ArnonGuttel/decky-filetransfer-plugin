@@ -21,7 +21,6 @@ export interface Profile {
 export function ParseBackendProfiles(backendProfilesData: any) {
     // Parse the backend profiles and convert them to the Profile format
     try {
-        console.info(backendProfilesData);
         return Object.keys(backendProfilesData).map((profileName: string) => {
             const backendProfile = backendProfilesData[profileName];
             return {

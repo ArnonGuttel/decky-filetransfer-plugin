@@ -5,6 +5,6 @@
   "publish": {
     "tags": ["File Transfer","SCP","SSH","Upload","Download"],
     "description": "Upload files from deck to pc using SCP",
-    "image": "https://opengraph.githubassets.com/1/SteamDeckHomebrew/PluginLoader"
+    "image": "https://github.com/ArnonGuttel/decky-filetransfer-plugin/blob/main/assets/screenshots/deckSCP-home.png?raw=true"
   }
 }

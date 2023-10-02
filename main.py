@@ -28,6 +28,7 @@ class SshClient:
         self.port = port
         self.client = None
         self.scp = None
+        self.cur_progress = 0
         self.setup_ssh_client()
 
     def setup_ssh_client(self):
@@ -40,9 +41,7 @@ class SshClient:
         try:
             self.client.connect(self.host, self.port, self.username, self.password)
             decky_plugin.logger.info("SSH client connected")
-            self.scp = scp.SCPClient(
-                self.client.get_transport()
-            )  # Initialize the SCPClient
+            self.scp = scp.SCPClient(self.client.get_transport(),progress=self.progress)  # Initialize the SCPClient
         except Exception as e:
             decky_plugin.logger.error(f"Error creating SSH client: {str(e)}")
             self.client = None
@@ -67,6 +66,8 @@ class SshClient:
             decky_plugin.logger.error(f"Error reading response: {str(e)}")
             return ""
 
+    def progress(self, filename, size, sent):
+        self.cur_progress = float(sent)/float(size)*100
 
 class Plugin:
     __settings = None
@@ -258,6 +259,11 @@ class Plugin:
     async def clear_target_path(self):
         decky_plugin.logger.info(f"clear_target_path request recived")
         self.__target_path = "" 
+
+    async def get_progress_percentage(self):
+        decky_plugin.logger.info(f"get_progress_percentage request received")
+        decky_plugin.logger.info(f"progress: {self.ssh_client.cur_progress:.2f}%")
+        return self.ssh_client.cur_progress
 
     async def move_file(self):
         try:
